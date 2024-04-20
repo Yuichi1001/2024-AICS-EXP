@@ -57,7 +57,7 @@ class ResBlock(nn.Module):
         
     def forward(self, x):
         #TODO: 返回残差运算的结果
-        return x + self.layer(x)
+        return torch.nn.functional.relu(self.layer(x) + x)
 
 
 class TransNet(nn.Module):
@@ -120,7 +120,7 @@ class TransNet(nn.Module):
         )
 
     def forward(self, x):
-        return self.layer(x)
+        return torch.nn.functional.relu(self.layer(x))
     
 
 
