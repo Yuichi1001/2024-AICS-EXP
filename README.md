@@ -36,3 +36,13 @@
 |       exp_4_4       |  100  |
 | exp_5_3(三选一实验) |  100  |
 |      待更新...      |       |
+
+## 致谢
+
+感谢以下同学对仓库代码提出的issue和pr：
+
+- [yangyu-wang]: https://github.com/yangyu-wang
+
+- [Herry]: https://github.com/Herry0w0
+
+  
