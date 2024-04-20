@@ -41,8 +41,6 @@
 
 感谢以下同学对仓库代码提出的issue和pr：
 
-- [yangyu-wang]: https://github.com/yangyu-wang	"yangyu-wang"
+- [yangyu-wang](https://github.com/yangyu-wang)
+- [Herry](https://github.com/Herry0w0)
 
-- [Herry]: https://github.com/Herry0w0	"Herry"
-
-  
