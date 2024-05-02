@@ -44,3 +44,12 @@
 - [yangyu-wang](https://github.com/yangyu-wang)
 - [Herry](https://github.com/Herry0w0)
 
+## Star History
+
+<a href="https://star-history.com/#Yuichi1001/2024-AICS-EXP&Timeline">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Yuichi1001/2024-AICS-EXP&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Yuichi1001/2024-AICS-EXP&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Yuichi1001/2024-AICS-EXP&type=Timeline" />
+ </picture>
+</a>
