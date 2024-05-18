@@ -1,0 +1,174 @@
+// file: 02_scalar_nram.mlu
+
+#include <bang.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+
+#define DEBUG 0
+
+#define M 128
+#define N 256
+#define K 128
+
+float relativeError(float a, float b) {
+  float abs_diff = fabs(a - b);
+  float max_value = fmax(fabs(a), fabs(b));
+  float result = abs_diff / max_value;
+  return result;
+}
+
+float generateRandomFloat(float min, float max) {
+#if DEBUG
+  return 1.1;
+#else
+  float scale = rand() / (float)RAND_MAX;
+  return min + scale * (max - min);
+#endif
+}
+
+__attribute__((noinline)) void multiplyMatricesCPU(float *left, float *right,
+                                                   float *result, int m, int n,
+                                                   int k) {
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < k; j++) {
+      result[i * k + j] = 0.0f;
+      for (int x = 0; x < n; x++) {
+        // TODO: 请补充标量矩阵乘计算部分代码
+        result[i * k + j] += left[i * n + x] * right[x * k + j];
+      }
+    }
+  }
+}
+
+__mlu_entry__ void multiplyMatricesMLU(float *left, float *right, float *result,
+                                       int m, int n, int k) {
+  __nram__ float left_nram[M * N];
+  __nram__ float right_nram[N * K];
+  __nram__ float result_nram[M * K];
+  // TODO: 请补充将左矩阵从GDRAM拷贝至NRAM的代码
+  __memcpy(left_nram, left, M * N * sizeof(float), GDRAM2NRAM);
+  // TODO: 请补充将右矩阵从GDRAM拷贝至NRAM的代码
+  __memcpy(right_nram, right, N * K * sizeof(float), GDRAM2NRAM);
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < k; j++) {
+      result_nram[i * k + j] = 0.0f;
+      for (int x = 0; x < n; x++) {
+        // TODO: 请补充标量矩阵乘计算部分代码
+        result_nram[i * k + j] += left_nram[i * n + x] * right_nram[x * k + j];
+      }
+    }
+  }
+  // TODO: 请补充将结果矩阵从NRAM写回GDRAM的代码
+  __memcpy(result, result_nram, M * K * sizeof(float), NRAM2GDRAM);
+}
+
+int main() {
+  int m = M, n = N, k = K;
+  printf("\nM = %d, N = %d, K = %d\n", m, n, k);
+
+  float *left = (float *)malloc(m * n * sizeof(float));
+  float *right = (float *)malloc(n * k * sizeof(float));
+  float *result = (float *)malloc(m * k * sizeof(float));
+
+  float *left_mlu = NULL, *right_mlu = NULL, *result_mlu = NULL;
+  CNRT_CHECK(cnrtMalloc((void **)&left_mlu, m * n * sizeof(float)));
+  CNRT_CHECK(cnrtMalloc((void **)&right_mlu, n * k * sizeof(float)));
+  CNRT_CHECK(cnrtMalloc((void **)&result_mlu, m * k * sizeof(float)));
+
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      left[i * n + j] = generateRandomFloat(1.0f, 1.1f);
+    }
+  }
+
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < k; j++) {
+      right[i * k + j] = generateRandomFloat(1.0f, 1.1f);
+    }
+  }
+
+  CNRT_CHECK(
+      cnrtMemcpy(left_mlu, left, m * n * sizeof(float), cnrtMemcpyHostToDev));
+  CNRT_CHECK(
+      cnrtMemcpy(right_mlu, right, n * k * sizeof(float), cnrtMemcpyHostToDev));
+
+  struct timeval st_cpu, et_cpu;
+  gettimeofday(&st_cpu, NULL);
+  multiplyMatricesCPU(left, right, result, m, n, k);
+  gettimeofday(&et_cpu, NULL);
+
+  float cpu_time_used = (et_cpu.tv_sec - st_cpu.tv_sec) * 1e3 +
+                        (et_cpu.tv_usec - st_cpu.tv_usec) / 1e3;
+  printf("\nCPU Time taken: %.3f ms\n", cpu_time_used);
+#if DEBUG
+  printf("\nCPU Result Matrix:\n");
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < k; j++) {
+      printf("%f\t", result[i * k + j]);
+    }
+    printf("\n");
+  }
+#endif
+
+  cnrtNotifier_t st_mlu, et_mlu;
+  CNRT_CHECK(cnrtNotifierCreate(&st_mlu));
+  CNRT_CHECK(cnrtNotifierCreate(&et_mlu));
+  cnrtQueue_t queue;
+  CNRT_CHECK(cnrtQueueCreate(&queue));
+  cnrtDim3_t dim = {1, 1, 1};
+  cnrtFunctionType_t func_type = CNRT_FUNC_TYPE_BLOCK;
+  // TODO: 请补充核函数开始计时代码
+  CNRT_CHECK(cnrtPlaceNotifier(st_mlu, queue));
+  multiplyMatricesMLU<<<dim, func_type, queue>>>(left_mlu, right_mlu,
+                                                 result_mlu, m, n, k);
+  // TODO: 请补充核函数结束计时代码
+  CNRT_CHECK(cnrtPlaceNotifier(et_mlu, queue));
+  CNRT_CHECK(cnrtQueueSync(queue));
+
+  float mlu_time_used = 0.0f;
+  // TODO: 请补充核函数耗时统计代码
+  CNRT_CHECK(cnrtNotifierDuration( st_mlu, et_mlu, &mlu_time_used));
+  printf("\nMLU Time taken: %.3f ms\n", mlu_time_used);
+
+  float *result_actual = (float *)malloc(m * k * sizeof(float));
+  CNRT_CHECK(cnrtMemcpy(result_actual, result_mlu, m * k * sizeof(float),
+                        cnrtMemcpyDevToHost));
+#if DEBUG
+  printf("\nMLU Result Matrix:\n");
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < k; j++) {
+      printf("%f\t", result_actual[i * k + j]);
+    }
+    printf("\n");
+  }
+#endif
+
+  bool is_passed = true;
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < k; j++) {
+      float diff_rel =
+          relativeError(result[i * k + j], result_actual[i * k + j]);
+      if (diff_rel > 0.1) {
+        printf("diff_rel = %.3f\n", diff_rel);
+        printf("[%d, %d]: cpu = %f, mlu = %f\n", i, j, result[i * k + j],
+               result_actual[i * k + j]);
+        is_passed = false;
+      }
+    }
+  }
+  printf(is_passed ? "\n02PASSED\n" : "\n02FAILED\n");
+
+  free(left);
+  CNRT_CHECK(cnrtFree(left_mlu));
+  free(right);
+  CNRT_CHECK(cnrtFree(right_mlu));
+  free(result);
+  free(result_actual);
+  CNRT_CHECK(cnrtFree(result_mlu));
+  CNRT_CHECK(cnrtNotifierDestroy(st_mlu));
+  CNRT_CHECK(cnrtNotifierDestroy(et_mlu));
+  CNRT_CHECK(cnrtQueueDestroy(queue));
+
+  return 0;
+}

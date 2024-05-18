@@ -1,0 +1,101 @@
+#include <bang_sigmoid_sample.h>
+#include <kernel.h>
+
+__nram__ char NRAM_BUFFER[MAX_NRAM_SIZE];
+
+//原题目中没有bang_sigmoid的定义，需要自己添加
+template<typename T>
+__mlu_device__ void bang_sigmoid(T* output, const T* input,const int size) {
+    for (int i = 0; i < size; ++i) {
+        output[i] = 1 / (1 + exp(-input[i]));
+    }
+}
+
+
+template<typename T>
+__mlu_global__ void bang_sigmoid_kernel(T *d_dst, T *d_src, int N) {
+  const int NRAM_LIMIT_SIZE = FLOOR_ALIGN(MAX_NRAM_SIZE / 2, 64);
+  int nram_limit = NRAM_LIMIT_SIZE / sizeof(T);
+  // 对列数据切分
+  int32_t num_per_core = N / taskDim;
+  int32_t repeat = num_per_core / nram_limit;
+  int32_t rem = num_per_core % nram_limit;
+
+  T *d_input_per_task = d_src + taskId * nram_limit;
+  T *d_output_per_task = d_dst + taskId * nram_limit;
+  T *nram_out = (T *)NRAM_BUFFER;
+  T *nram_in = (T *)(NRAM_BUFFER + NRAM_LIMIT_SIZE);
+
+  const int align_rem = CEIL_ALIGN(rem, 64);
+
+  int i = 0;
+  for (; i < repeat; i++) {
+    // TODO: 请补充拷贝方向
+    __memcpy_async(nram_in, d_input_per_task + i * nram_limit, NRAM_LIMIT_SIZE,
+                   GDRAM2NRAM);
+    __sync_io();
+    // TODO: 请补充BANG的sigmoid函数
+    bang_sigmoid(nram_out, nram_in, nram_limit);
+    __sync_compute();
+
+    // TODO: 请补充拷贝方向
+    __memcpy_async(d_output_per_task + i * nram_limit, nram_out,
+                   NRAM_LIMIT_SIZE, NRAM2GDRAM);
+
+    __sync_io();
+  }
+  if (rem > 0) {
+    // TODO: 请补充拷贝方向
+    __memcpy_async(nram_in, d_input_per_task + i * nram_limit,
+                   rem * sizeof(T), GDRAM2NRAM);
+    __sync_io();
+    // TODO: 请补充BANG的sigmoid函数
+    bang_sigmoid(nram_out, nram_in, align_rem);
+    __sync_compute();
+    // TODO: 请补充拷贝方向
+    __memcpy_async(d_output_per_task + i * nram_limit, nram_out,
+                   rem * sizeof(T), NRAM2GDRAM);
+
+    __sync_io();
+  }
+}
+template<typename T>
+void bang_sigmoid_kernel_entry(cnrtQueue *queue, T *d_dst, T *d_src,
+                               int elem_count) {
+  cnrtDim3_t dim = {1, 1, 1};
+  int taskDims = dim.x * dim.y * dim.z;
+  // TODO: 请补充Kernel函数类型
+  cnrtFunctionType_t c = CNRT_FUNC_TYPE_BLOCK;
+  if (elem_count < taskDims) {
+    dim.x = 1;
+    dim.y = 1;
+  }
+  // TODO: 请补充Kernel函数的调用
+  bang_sigmoid_kernel<<<dim, c, queue>>>(d_dst, d_src, elem_count);
+  cnrtQueueSync(queue);
+}
+template<typename T>
+void bang_sigmoid_sample(T *h_dst, T *h_src, const int elem_count) {
+
+  T *d_src, *d_dst;
+  cnrtQueue_t queue;
+  cnrtQueueCreate(&queue);
+  cnrtRet_t ret;
+  ret =
+      cnrtMalloc(reinterpret_cast<void **>(&d_src), elem_count * sizeof(T));
+  ret =
+      cnrtMalloc(reinterpret_cast<void **>(&d_dst), elem_count * sizeof(T));
+
+  ret = cnrtMemcpy(d_src, h_src, elem_count * sizeof(T),
+                   CNRT_MEM_TRANS_DIR_HOST2DEV);
+
+  bang_sigmoid_kernel_entry(queue, d_dst, d_src, elem_count);
+  cnrtQueueSync(queue);
+  // TODO: 请补充Host和Device间的内存拷贝方向
+  ret = cnrtMemcpy(h_dst, d_dst, elem_count * sizeof(T),
+                   CNRT_MEM_TRANS_DIR_DEV2HOST);
+
+  ret = cnrtQueueDestroy(queue);
+}
+template void bang_sigmoid_sample(float*, float*, int);
+template void bang_sigmoid_kernel_entry(cnrtQueue *, float *, float *, int);
