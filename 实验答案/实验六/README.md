@@ -1,1 +1,1 @@
-如果实验六在modelsim上观察不到pe_result的值，可以使用仓库里这个修改后的data_gen.py重新生成一下数据后再试试。原先的data_gen有bug
+如果实验六在modelsim上观察不到pe_result的值，可以使用仓库里这个修改后的data/data_gen.py重新生成一下数据后再试试。原先的data_gen有bug
