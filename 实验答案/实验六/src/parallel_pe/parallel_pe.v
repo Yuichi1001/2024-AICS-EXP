@@ -23,7 +23,7 @@ pe_acc u_pe_acc(
 );
 
 reg [31:0] psum_r;
-wire [31:0] psum_d = ({32{~ctl[0]}} & psum_r) + acc_result;  /* TODO */
+wire [31:0] psum_d = ctl[0] ? acc_result : acc_result + psum_r;
 
 always@(posedge clk or negedge rst_n)
 if(!rst_n) begin
@@ -35,7 +35,7 @@ end
 always@(posedge clk or negedge rst_n)
 if(!rst_n) begin
   vld_o <= 1'b0;
-end else if(vld_i && ctl[1]) begin
+end else if(ctl[1]) begin
   vld_o <= 1'b1;
 end else begin
   vld_o <= 1'b0;
