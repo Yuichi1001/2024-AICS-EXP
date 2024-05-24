@@ -18,6 +18,8 @@
 
 ### 更新日志
 
+- 2024/05/24：补充实验五-三选一实验中的yolov5实验
+
 - 2024/05/21：更新理论教学的最新课件
 
 - 2024/05/20：由于实验六老师提供的代码具有众多bug，且无法比较四个result的值，只能比较其中一个，因此直接在答案中上传了修改后的tb_top(0-2).v的代码，可供参考。同时，实验六对应的实验题目中的data_gen.py及tb_top(0-2).v的代码已经替换为修改后的代码，需要重新做实验的同学可以直接使用
@@ -53,7 +55,7 @@
 ## 致谢
 
 感谢以下同学对仓库代码提出的issue和pr：
-
+- [WwwwwyDev](https://github.com/WwwwwyDev)
 - [yangyu-wang](https://github.com/yangyu-wang)
 - [Herry](https://github.com/Herry0w0)
 
