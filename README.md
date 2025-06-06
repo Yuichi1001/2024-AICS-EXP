@@ -73,6 +73,7 @@
 - [yangyu-wang](https://github.com/yangyu-wang)
 - [Herry](https://github.com/Herry0w0)
 - [PandaChen-pro](https://github.com/PandaChen-pro)
+- [JohnLocke](https://github.com/JohnLocke)
 
 ## Star History
 
