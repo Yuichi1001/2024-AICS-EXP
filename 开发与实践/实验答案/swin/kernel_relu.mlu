@@ -1,0 +1,46 @@
+#include "bang.h"
+#include "kernel_relu.h"
+#define BANG_NRAM_SIZE 1024 * 128
+template <typename T>
+__mlu_entry__ void VectorReLUBlock(const T *input, T *output, const uint32_t count) {
+  __nram__ char buffer[BANG_NRAM_SIZE];
+  T *src_nram = (T *)buffer;
+  T *dst_nram = (T *)(buffer + BANG_NRAM_SIZE / 2);
+
+  //TODO: 计算 NRAM 缓冲区能容纳的数据元素数量
+  uint32_t nram_count = BANG_NRAM_SIZE / 2 / sizeof(T);
+  //TODO: 确定需要处理的数据块的循环次数
+  uint32_t loop = count / nram_count + int(count % nram_count > 0);
+  for (uint32_t i = 0; i < loop; ++i) {
+    //TODO: 确定当前数据块的偏移量（若是最后一个数据块，那么 offset 将等于剩余数据元素的数量，否则 offset 将等于 nram_count）
+    uint32_t offset = (i == loop - 1) ? count - i * nram_count : nram_count;
+    //TODO: 将数据从输入存储器（GDRAM）复制到 NRAM 缓冲区（src_nram）
+    __memcpy(src_nram, input + i * nram_count, offset * sizeof(T), GDRAM2NRAM);
+    //TODO: 在 NRAM 缓冲区上应用 ReLU 操作（__bang_active_relu）
+    __bang_active_relu(dst_nram, src_nram, offset);
+    //TODO: 将做完relu操作的输出从NRAM搬回GDRAM
+    __memcpy(output + i * nram_count, dst_nram, offset * sizeof(T), NRAM2GDRAM);
+  }
+  __bang_printf("plugin relu success\n");
+}
+
+void ReluEnqueue(cnrtDim3_t dim,
+                 cnrtFunctionType_t ktype,
+                 cnrtQueue_t queue,
+                 float *input_addr,
+                 float *output_addr,
+                 uint32_t count) {
+  //TODO: 调用 VectorReLUBlock 函数，使用模板函数处理数据
+  VectorReLUBlock<<<dim, ktype, queue>>>(input_addr, output_addr, count);
+}
+
+
+void ReluEnqueue(cnrtDim3_t dim,
+                 cnrtFunctionType_t ktype,
+                 cnrtQueue_t queue,
+                 uint16_t *input_addr,
+                 uint16_t *output_addr,
+                 uint32_t count) {
+  // 调用 VectorReLUBlock 函数，使用模板函数处理数据，将数据强制转换为 half 类型
+  VectorReLUBlock<<<dim, ktype, queue>>>((half *)input_addr, (half *)output_addr, count);
+}
