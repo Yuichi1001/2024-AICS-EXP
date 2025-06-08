@@ -7,6 +7,7 @@
 - 不再使用TensorFlow，全面使用PyTorch
 - 大量修改旧版的题目代码
 - 新增大模型实验等
+- 新增《智能计算系统开发与实践》相关文件
 
 ## 项目状态
 
@@ -15,6 +16,8 @@
 - 如果有帮到大家的话希望大家能给仓库留个Star~
 
 ### 更新日志
+
+- 2025/06/05：更新《智能计算系统开发与实践》相关课件和实验手册、题目及答案
 
 - 2025/06/03：更新实验八-大模型相关实验手册、题目及答案
 
@@ -58,6 +61,10 @@
 |    exp_7_1（智能编程语言算子开发实验：满分100）     |  100  |
 |    exp_7_2（智能编程语言性能优化实验：满分100）     |  100  |
 |              exp_8(CodeLLAMA：满分100)              |  100  |
+|    以下三个实验为《智能计算系统开发与实践》课程实验     |    |
+|    （模型推理: YOLOv5 目标检测：满分100）           |  100  |
+|    （模型推理:BERT的SQuAD任务：满分100）            |  100  |
+|     (模型推理: Swin-Transformer 图像分类：满分100)    |  100  |
 
 ## 致谢
 
@@ -66,6 +73,7 @@
 - [yangyu-wang](https://github.com/yangyu-wang)
 - [Herry](https://github.com/Herry0w0)
 - [PandaChen-pro](https://github.com/PandaChen-pro)
+- [JohnLocke](https://github.com/JohnLocke)
 
 ## Star History
 
