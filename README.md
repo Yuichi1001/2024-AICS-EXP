@@ -11,7 +11,7 @@
 
 ## 项目状态
 
-- 本项目跟随课程进度实时更新，截止2025.06.03已更新至大模型实验8.1及8.2
+- 本项目跟随课程进度实时更新，截止2025.06.11已更新至大模型实验8.1/8.2/8.3
 - 本项目适配2025年春季学期，后续课程实验若发生更改，欢迎各位同学提交pr
 - 有同学反馈实验8.1的triton优化部分虽然能通过评测，但是代码部分有误，欢迎有改进的同学提出pr
 - 如果有帮到大家的话希望大家能给仓库留个Star~
@@ -61,8 +61,9 @@
 |           exp_6（modelsim实验：满分120）            |  120  |
 |    exp_7_1（智能编程语言算子开发实验：满分100）     |  100  |
 |    exp_7_2（智能编程语言性能优化实验：满分100）     |  100  |
-|              exp_8_1(CodeLLAMA：满分100)              |  100  |
+|         exp_8_1(Stable Diffution：满分100)          |  100  |
 |              exp_8_2(LLAMA3.2: 满分100)              |  100  |
+|              exp_8_3(CodeLLAMA：满分100)              |  100  |
 =======
 |    以下三个实验为《智能计算系统开发与实践》课程实验     |    |
 |    （模型推理: YOLOv5 目标检测：满分100）           |  100  |
@@ -78,6 +79,7 @@
 - [PandaChen-pro](https://github.com/PandaChen-pro)
 - [dragonzhoulong](https://github.com/Dragonzhoulong)
 - [JohnLocke](https://github.com/JohnLocke)
+- [yu-yake2002](https://github.com/yu-yake2002)
 
 ## Star History
 
