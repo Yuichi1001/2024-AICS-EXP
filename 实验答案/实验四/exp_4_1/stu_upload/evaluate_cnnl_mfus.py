@@ -1,17 +1,13 @@
 import os
 import torch
 import torch_mlu
-import torch_mlu.core.mlu_model as ct
 import torch.nn as nn
 import time
 from PIL import Image
 from torchvision import transforms
 torch.set_grad_enabled(False)
-ct.set_device(0)
-cfgs = [64,'R', 64,'R', 'M', 128,'R', 128,'R', 'M',
-       256,'R', 256,'R', 256,'R', 256,'R', 'M', 
-       512,'R', 512,'R', 512,'R', 512,'R', 'M',
-        512,'R', 512,'R', 512,'R', 512,'R', 'M']
+cfgs = [64, 64, 128, 128, 256, 256, 256, 256,
+        512, 512, 512, 512, 512, 512, 512, 512]
 
 IMAGE_PATH = 'data/strawberries.jpg'
 VGG_PATH = 'models/vgg19.pth'
@@ -31,10 +27,9 @@ def vgg19():
     for i, layer_name in enumerate(layers):
         if layer_name.startswith('conv'):
             # TODO: 在时序容器中传入卷积运算
-            while cfgs and isinstance(cfgs[0], str):
-                cfgs.pop(0)
-            out_channels = cfgs.pop(0) if cfgs else in_channels
-            layer_container.add_module(layer_name, nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1))
+            out_channels = cfgs.pop(0)   # 直接取出整数，不会越界
+            conv_layer = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+            layer_container.add_module(layer_name, conv_layer)
             in_channels = out_channels
         elif layer_name.startswith('relu'):
             # TODO: 在时序容器中执行ReLU计算
@@ -84,6 +79,7 @@ def load_image(path):
 
 
 if __name__ == '__main__':
+    device = torch.device('mlu')
     input_image = load_image(IMAGE_PATH)
     # TODO: 生成VGG19网络模型并保存在net中
     net = vgg19()
@@ -95,9 +91,9 @@ if __name__ == '__main__':
     #TODO: 使用JIT对模型进行trace，把动态图转化为静态图，得到net_trace
     net_trace = torch.jit.trace(net, example_forward_input)
     #TODO: 将输入图像拷贝到MLU设备
-    input_image_mlu = input_image.to(ct.mlu_device())
+    input_image_mlu = input_image.to(device)
     #TODO: 将net_trace拷贝到MLU设备
-    net_trace = net_trace.to(ct.mlu_device())
+    net_trace = net_trace.to(device)
     st = time.time()
     #TODO: 进行推理，得到prob
     prob = net_trace(input_image_mlu)
