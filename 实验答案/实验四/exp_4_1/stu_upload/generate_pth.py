@@ -5,10 +5,8 @@ import torch.nn as nn
 from collections import OrderedDict
 
 os.putenv('MLU_VISIBLE_DEVICES','')
-cfgs = [64,'R', 64,'R', 'M', 128,'R', 128,'R', 'M',
-       256,'R', 256,'R', 256,'R', 256,'R', 'M', 
-       512,'R', 512,'R', 512,'R', 512,'R', 'M',
-        512,'R', 512,'R', 512,'R', 512,'R', 'M']
+cfgs = [64, 64, 128, 128, 256, 256, 256, 256,
+        512, 512, 512, 512, 512, 512, 512, 512]
 
 IMAGE_PATH = 'data/strawberries.jpg'
 VGG_PATH = 'data/imagenet-vgg-verydeep-19.mat'
@@ -28,9 +26,7 @@ def vgg19():
     for i, layer_name in enumerate(layers):
         if layer_name.startswith('conv'):
             # TODO: 在时序容器中传入卷积运算
-            out_channels = cfgs.pop(0)
-            while isinstance(out_channels, str):  # 跳过'R'和'M'
-                out_channels = cfgs.pop(0)
+            out_channels = cfgs.pop(0)   # 直接取出整数，不会越界
             conv_layer = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
             layer_container.add_module(layer_name, conv_layer)
             in_channels = out_channels
