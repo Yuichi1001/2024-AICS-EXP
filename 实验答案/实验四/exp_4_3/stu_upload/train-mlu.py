@@ -5,7 +5,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import save_image
 import torch
 import torch_mlu
-import torch_mlu.core.mlu_model as ct
 import cv2
 import numpy
 import os
@@ -45,12 +44,17 @@ class COCODataSet(Dataset):
 class VGG19(nn.Module):
     def __init__(self):
         super(VGG19, self).__init__()
-        a = vgg19(True)
+        #TODO: 调用vgg19网络
+        a = vgg19(pretrained=True)
         a = a.features
-        self.layer1 = a[:4]
-        self.layer2 = a[4:9]
-        self.layer3 = a[9:18]
-        self.layer4 = a[18:27]
+        #TODO: 定义self.layer1为第2层卷积后对应的特征
+        self.layer1 = nn.Sequential(*a[:3])
+        #TODO: 定义self.layer2为第4层卷积后对应的特征
+        self.layer2 = nn.Sequential(*a[3:6])
+        #TODO: 定义self.layer3为第8层卷积后对应的特征
+        self.layer3 = nn.Sequential(*a[6:11])
+        #TODO: 定义self.layer4为第12层卷积后对应的特征
+        self.layer4 = nn.Sequential(*a[11:16])
 
     def forward(self, input_):
         out1 = self.layer1(input_)
@@ -178,22 +182,23 @@ def get_gram_matrix(f_map):
 
 
 if __name__ == '__main__':
+    device = torch.device('mlu')
     image_style = load_image('./data/udnie.jpg').cpu()
     #TODO: 将输入的风格图像加载到mlu设备上,得到mlu_iamge_style
-    image_style_mlu = image_style.to(ct.mlu_device())
+    image_style_mlu = image_style.to(device)
     net = VGG19().cpu()
     g_net = TransNet().cpu()
     #TODO: 将特征网络加载到mlu得到mlu_g_net
-    mlu_g_net = g_net.to(ct.mlu_device())
+    mlu_g_net = g_net.to(device)
     #TODO: 将图像转换网络加载到mlu得到mlu_net
-    mlu_net = net.to(ct.mlu_device())
+    mlu_net = net.to(device)
     print("mlu_net build PASS!\n")
     #TODO: 使用adam优化器对mlu_g_net的参数进行优化
     optimizer = torch.optim.Adam(mlu_g_net.parameters(), lr=0.001)
     #TODO: 在cpu上计算均方误差损失函得到loss_func
     loss_func = torch.nn.MSELoss()
     #TODO: 将损失函数加载到mlu上得到mlu_loss_func
-    mlu_loss_func = loss_func.to(ct.mlu_device())
+    mlu_loss_func = loss_func.to(device)
     print("build loss PASS!\n")
     data_set = COCODataSet()
     print("load COCODataSet PASS!\n")
@@ -213,7 +218,7 @@ if __name__ == '__main__':
         for i, image in enumerate(data_loader):
             image_c = image.cpu()
             #TODO: 将输入图像拷贝到mlu上得到mlu_image_c
-            mlu_image_c = image_c.to(ct.mlu_device())
+            mlu_image_c = image_c.to(device)
             #TODO: 将mlu_image_c经过mlu_g_net输出生成图像mlu_imge_g
             mlu_image_g = mlu_g_net(mlu_image_c)
             #TODO: 利用特征提取网络mlu_net提取生成图像mlu_image_g的特征out1-out4
