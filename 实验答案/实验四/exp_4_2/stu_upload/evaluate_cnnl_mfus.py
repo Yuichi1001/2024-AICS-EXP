@@ -128,6 +128,7 @@ class TransNet(nn.Module):
 
 
 if __name__ == '__main__':
+    device = torch.device('mlu')
     # TODO: 使用cpu生成图像转换网络模型并保存在g_net中
     g_net = TransNet().to('cpu')
     # TODO: 从/models文件夹下加载网络参数到g_net中
@@ -142,13 +143,13 @@ if __name__ == '__main__':
     example_forward_input = torch.rand((1,3,512,512),dtype = torch.float)
     #TODO: 使用JIT对net模型进行trace，得到net_trace
     net_trace = torch.jit.trace(net, example_forward_input)
+    net_mlu = net_trace.to(device)
     for i, image in enumerate(data_group):
         print(f"The {i} image will be predicted.")
         image_c = image.cpu()
         #将image_c图片拷贝到MLU设备，得到input_image_c
-        input_image_c = image_c.to(torch_mlu.core.mlu_model.get_device())
+        input_image_c = image_c.to(device)
         #将net_trace模型拷贝到MLU设备，得到net_mlu
-        net_mlu = net_trace.to(torch_mlu.core.mlu_model.get_device())
         start = time.time()
         # TODO: 对input_image_c计算 net_mlu,得到image_g_mlu
         image_g_mlu = net_mlu(input_image_c)
