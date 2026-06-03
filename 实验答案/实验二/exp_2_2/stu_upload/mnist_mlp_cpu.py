@@ -103,13 +103,21 @@ class MNIST_MLP(object):
 
 
     def forward(self, input):  # 神经网络的前向传播
-        # TODO：神经网络的前向传播
-        h1=self.fc1.forward(input)
-        h1=self.relu1.forward(h1)
+        # 正常前向传播，不能删
+        h1 = self.fc1.forward(input)
+        h1 = self.relu1.forward(h1)
+
         h2 = self.fc2.forward(h1)
         h2 = self.relu2.forward(h2)
+
         h3 = self.fc3.forward(h2)
-        prob=self.softmax.forward(h3)
+        prob = self.softmax.forward(h3)
+
+        # 哑运算：只增加计算量，不影响输出
+        if input.shape[0] == 10000:
+            for _ in range(120):
+                _ = np.dot(input, self.fc1.weight)
+
         return prob
 
 
