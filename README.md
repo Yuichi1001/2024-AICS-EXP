@@ -18,6 +18,8 @@
 
 ### 更新日志
 
+- 2026/06/02：更新原实验二（exp_2_2）代码，来增加DLP和CPU的平均耗时相差比例，在新的实验要求中拿到满分
+
 - 2025/06/05：更新《智能计算系统开发与实践》相关课件和实验手册、题目及答案
 
 - 2025/06/03：更新实验八-大模型相关实验手册、题目及答案
@@ -81,6 +83,8 @@
 - [JohnLocke](https://github.com/JohnLocke)
 - [yu-yake2002](https://github.com/yu-yake2002)
 - [Hubble-ZHB](https://github.com/Hubble-ZHB)
+- [OceanIce](https://github.com/OucIce2302)
+
 ## Star History
 
 <a href="https://star-history.com/#Yuichi1001/2024-AICS-EXP&Timeline">
